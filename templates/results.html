@@ -1,7 +1,12 @@
 <html>
 <body>
-{% for name in names %}
-<br> {{ name }}
-{% endfor %}
+{% if names %}
+  {% for name in names %}
+    <br> {{ name }}
+  {% endfor %}
+{% else %}
+  No Results
+{% endif %}
+
 </body>
 </html>
