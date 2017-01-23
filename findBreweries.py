@@ -4,7 +4,6 @@ app = Flask(__name__)
 
 url = 'http://api.brewerydb.com/v2'
 key = '8598adbbb6bd20ddd9c453876b6385e9'
-globalParams = {'key':'8598adbbb6bd20ddd9c453876b6385e9'}
 
 @app.route("/")
 def home():
@@ -17,13 +16,12 @@ def find():
     'city': flask.request.form['city'],
     'zip':flask.request.form['zip']
   }
+  print 'at find location={0}'.format(location)
   breweries=getBreweryNamesForLocation(location)
-  return flask.render_template('results.html', names=breweries)
+  return flask.render_template('index.html', names=breweries)
 
 # Make a GET but catch errors
 def safeGet(url, headers=None, params=None):
-  print url
-  print params
   try:
     response = requests.get(url,headers=headers, params=params, timeout=8)
     if response.status_code != 200:
@@ -53,8 +51,9 @@ def getAllPages(url, params):
   return data
 
 def getDataForLocation(location):
+  print 'at getDataForLocation location={0}'.format(location)
   locatonUrl = '{0}/locations'.format(url)
-  params = globalParams
+  params = {}
   if location['zip']:
     params['postalCode'] = location['zip']
   if location['city']:
@@ -62,10 +61,14 @@ def getDataForLocation(location):
   if location['state']:
     params['region'] =  location['state']
   params['isClosed'] = 'N'
+  params['key'] = key
+  print params
   data = getAllPages(locatonUrl, params)
   return data
 
 def getBreweryNamesForLocation(location):
+  print 'at getBreweryNamesForLocation location={0}'.format(location)
+
   data = getDataForLocation(location)
   if not data:
     return None

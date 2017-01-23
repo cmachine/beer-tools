@@ -1,11 +1,10 @@
 <html>
 <body>
 {% if names %}
+<h2>Results:</h2>
   {% for name in names %}
-    <br> {{ name }}
+    {{ name }} <br>
   {% endfor %}
-{% else %}
-  No Results
 {% endif %}
 
 </body>

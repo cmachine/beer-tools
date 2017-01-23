@@ -1,5 +1,5 @@
 <html>
-Find some breweries
+<h2>Find some breweries</h2>
 <body>
 <form action="/find" method="post">
   State:
@@ -60,5 +60,6 @@ Find some breweries
    <br>Zip Code:<input type="text" name="zip" value="">
    <br><input type="submit" name="Find Breweries">
 </form>
+{% include 'results.html' %}
 </body>
 </html>
