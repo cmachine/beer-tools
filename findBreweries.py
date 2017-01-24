@@ -1,6 +1,7 @@
-import requests, json, flask
-from flask import Flask
+import requests, json, flask, uuid, pprint
+from flask import Flask, session
 app = Flask(__name__)
+app.secret_key = str(uuid.uuid4())
 
 url = 'http://api.brewerydb.com/v2'
 key = '8598adbbb6bd20ddd9c453876b6385e9'
@@ -9,6 +10,20 @@ key = '8598adbbb6bd20ddd9c453876b6385e9'
 def home():
   return flask.render_template('index.html')
 
+@app.route('/info')
+def info():
+  info = {}
+  name = flask.request.args.get('name')
+  for brewery in session['breweries']:
+    print brewery['brewery']['name']
+    if brewery['brewery']['name'] == name:
+      info['name'] = brewery['brewery']['name']
+      info['website'] = brewery['brewery']['website']
+      info['streetAddress'] = brewery['streetAddress']
+      info['description'] = brewery['brewery']['description']
+  return flask.render_template('info.html', info=info, name=name)
+
+
 @app.route('/find', methods = ['POST'])
 def find():
   location = {
@@ -16,9 +31,11 @@ def find():
     'city': flask.request.form['city'],
     'zip':flask.request.form['zip']
   }
-  print 'at find location={0}'.format(location)
-  breweries=getBreweryNamesForLocation(location)
-  return flask.render_template('index.html', names=breweries)
+  breweries=getDataForLocation(location)
+  session.clear()
+  session['breweries'] = breweries
+  names = getBreweryNames(breweries)
+  return flask.render_template('index.html', names=names)
 
 # Make a GET but catch errors
 def safeGet(url, headers=None, params=None):
@@ -51,7 +68,6 @@ def getAllPages(url, params):
   return data
 
 def getDataForLocation(location):
-  print 'at getDataForLocation location={0}'.format(location)
   locatonUrl = '{0}/locations'.format(url)
   params = {}
   if location['zip']:
@@ -62,24 +78,20 @@ def getDataForLocation(location):
     params['region'] =  location['state']
   params['isClosed'] = 'N'
   params['key'] = key
-  print params
   data = getAllPages(locatonUrl, params)
   return data
 
-def getBreweryNamesForLocation(location):
-  print 'at getBreweryNamesForLocation location={0}'.format(location)
-
-  data = getDataForLocation(location)
-  if not data:
-    return None
-  return  getBreweryNames(data)
-
-def getBreweryNames(breweries):
+def getBreweryNames(breweryData):
   names = []
-  for brewery in breweries:
+  for brewery in breweryData:
     if 'brewery' in brewery:
-      names.append(brewery['brewery']['name'])
+      names.append((brewery['brewery']['name']))
   return names
+
+def getBreweryFromData(breweryData, name):
+  for brewery in breweryData:
+    if brewery['name'] == name:
+      return brewery
 
 
 if __name__ == "__main__":
