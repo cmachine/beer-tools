@@ -15,14 +15,27 @@ def info():
   info = {}
   name = flask.request.args.get('name')
   for brewery in session['breweries']:
-    print brewery['brewery']['name']
-    if brewery['brewery']['name'] == name:
-      info['name'] = brewery['brewery']['name']
-      info['website'] = brewery['brewery']['website']
-      info['streetAddress'] = brewery['streetAddress']
-      info['description'] = brewery['brewery']['description']
+    if brewery['name'] == name:
+      info['name'] = brewery['name']
+      info['website'] = brewery['website']
+      info['description'] = brewery['description']
+      # loation data
+      #info['streetAddress'] = brewery['streetAddress']
   return flask.render_template('info.html', info=info, name=name)
 
+@app.route('/search', methods=['POST'])
+def search():
+  query = flask.request.form['query']
+  type = flask.request.form['type']
+  searchData = getDataForSearch(query, type)
+  session.clear()
+  if type == 'Beer':
+    session['beers'] = searchData
+    names = getBeerNames(searchData)
+  else:
+    session['breweries'] = searchData
+    names = getBreweryNames(searchData)
+  return flask.render_template('index.html', names=names)
 
 @app.route('/find', methods = ['POST'])
 def find():
@@ -31,16 +44,25 @@ def find():
     'city': flask.request.form['city'],
     'zip':flask.request.form['zip']
   }
-  breweries=getDataForLocation(location)
+  locationData = getDataForLocation(location)
+  breweries = getBreweriesFromLocations(locationData)
   session.clear()
   session['breweries'] = breweries
   names = getBreweryNames(breweries)
   return flask.render_template('index.html', names=names)
 
+def getBreweriesFromLocations(locations):
+  breweries = []
+  for location in locations:
+    if 'brewery' in location:
+      breweries.append(location['brewery'])
+  return breweries
+
+
 # Make a GET but catch errors
 def safeGet(url, headers=None, params=None):
   try:
-    response = requests.get(url,headers=headers, params=params, timeout=8)
+    response = requests.get(url,headers=headers, params=params, timeout=10)
     if response.status_code != 200:
       print "get returned {0}\nURL: {1}\nparams: {2}\ntext: {3}".format(response.status_code, url, params, response.text)
       return None
@@ -48,6 +70,7 @@ def safeGet(url, headers=None, params=None):
   except requests.exceptions.RequestException as e:
     print e
     return None
+
 
 def getAllPages(url, params):
   page = 1
@@ -64,7 +87,13 @@ def getAllPages(url, params):
     except:
       return None
     page = page + 1
+  return data
 
+def getDataForSearch(query, type):
+  searchUrl = '{0}/search'.format(url)
+  params = {'q': query, 'type': type}
+  params['key'] = key
+  data = getAllPages(searchUrl, params)
   return data
 
 def getDataForLocation(location):
@@ -84,8 +113,15 @@ def getDataForLocation(location):
 def getBreweryNames(breweryData):
   names = []
   for brewery in breweryData:
-    if 'brewery' in brewery:
-      names.append((brewery['brewery']['name']))
+    if 'name' in brewery:
+      names.append(brewery['name'])
+  return names
+
+def getBeerNames(beerData):
+  names = []
+  for beer in beerData:
+    if 'name' in beer:
+      names.append(beer['name'])
   return names
 
 def getBreweryFromData(breweryData, name):

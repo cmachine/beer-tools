@@ -1,5 +1,5 @@
 <html>
-<h2>Find some breweries</h2>
+<h2>Lookup breweries</h2>
 <body>
 <form action="/find" method="post">
   State:
@@ -60,6 +60,19 @@
    <br>Zip Code:<input type="text" name="zip" value="">
    <br><input type="submit" name="Find Breweries">
 </form>
+<h2>Search for things</h2>
+
+<form action="/search" method="post">
+Search:
+<input type="text" name="query" value="">
+<br>Type:
+  <select name="type" size="1">
+    <option value="Beer">Beer</option>
+    <option value="Brewery">Brewery</option>
+  </select>
+<br><input type="submit" name="Search">
+</form>
+
 {% include 'results.html' %}
 </body>
 </html>
