@@ -3,7 +3,7 @@
 {% if names %}
 <h2>Results:</h2>
   {% for name in names %}
-    {{ name }} <br>
+    <a href="/info?name={{ name }}"> {{ name }} </a><br>
   {% endfor %}
 {% endif %}
 
